@@ -22,8 +22,8 @@
     "@types/bun": "latest"
   },
   "dependencies": {
+    "@google/genai": "^2.8.0",
     "@libsql/client": "^0.17.3",
-    "@google/generative-ai": "^0.21.0",
     "drizzle-orm": "^0.43.1",
     "lucide-svelte": "^0.511.0",
     "uuid": "^11.1.0"
