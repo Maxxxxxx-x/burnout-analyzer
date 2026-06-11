@@ -10,25 +10,34 @@ export const actions: Actions = {
 	default: async ({ request }) => {
 		const formData = await request.formData();
 
-		// Basic fields
-		const studentName = (formData.get('studentName') as string)?.trim();
-		const gradeLevel = formData.get('gradeLevel') as string;
-		const dailyStudyHours = parseFloat(formData.get('dailyStudyHours') as string);
-		const sleepHours = parseFloat(formData.get('sleepHours') as string);
-		const breakFrequency = formData.get('breakFrequency') as string;
-		const exerciseFrequency = formData.get('exerciseFrequency') as string;
-		const extracurriculars = (formData.get('extracurriculars') as string)?.trim() ?? '';
-		const currentStressLevel = parseInt(formData.get('currentStressLevel') as string, 10);
-		const academicGoals = (formData.get('academicGoals') as string)?.trim();
+		// Basic fields (use safe coercion)
+		const studentName = String(formData.get('studentName') ?? '').trim();
+		const gradeLevel = String(formData.get('gradeLevel') ?? '').trim();
+		const dailyStudyHoursRaw = String(formData.get('dailyStudyHours') ?? '');
+		const sleepHoursRaw = String(formData.get('sleepHours') ?? '');
+		const breakFrequency = String(formData.get('breakFrequency') ?? '').trim();
+		const exerciseFrequency = String(formData.get('exerciseFrequency') ?? '').trim();
+		const extracurriculars = String(formData.get('extracurriculars') ?? '').trim();
+		const currentStressLevelRaw = String(formData.get('currentStressLevel') ?? '');
+		const academicGoals = String(formData.get('academicGoals') ?? '').trim();
+
+		// Parse numeric fields
+		const dailyStudyHours = parseFloat(dailyStudyHoursRaw);
+		const sleepHours = parseFloat(sleepHoursRaw);
+		const currentStressLevel = parseInt(currentStressLevelRaw, 10);
 
 		// Symptoms (multi-value)
-		const recentSymptoms = formData.getAll('symptoms') as string[];
+		const recentSymptoms = (formData.getAll('symptoms') || []).map((v) => String(v));
 
 		// Schedule entries
-		const scheduleJson = formData.get('schedule') as string;
+		const scheduleJson = String(formData.get('schedule') ?? '[]');
 		let weeklySchedule: ScheduleEntry[] = [];
 		try {
-			weeklySchedule = JSON.parse(scheduleJson || '[]');
+			const parsed = JSON.parse(scheduleJson);
+			if (!Array.isArray(parsed)) {
+				return fail(400, { error: 'Invalid schedule data.' });
+			}
+			weeklySchedule = parsed as ScheduleEntry[];
 		} catch {
 			return fail(400, { error: 'Invalid schedule data.' });
 		}
@@ -38,6 +47,7 @@ export const actions: Actions = {
 		if (!gradeLevel) return fail(400, { error: 'Please select your grade level.' });
 		if (isNaN(dailyStudyHours)) return fail(400, { error: 'Invalid study hours.' });
 		if (isNaN(sleepHours)) return fail(400, { error: 'Invalid sleep hours.' });
+		if (isNaN(currentStressLevel)) return fail(400, { error: 'Invalid stress level.' });
 		if (!academicGoals) return fail(400, { error: 'Please describe your academic goals.' });
 		if (weeklySchedule.length === 0) return fail(400, { error: 'Please add at least one schedule entry.' });
 
@@ -82,18 +92,29 @@ export const actions: Actions = {
 			return fail(500, { error: msg });
 		}
 
+		// Ensure analysis has expected shape, provide safe defaults if missing
+		const analysisResult = {
+			burnoutRiskScore: typeof analysis?.burnoutRiskScore === 'number' ? analysis.burnoutRiskScore : 0,
+			burnoutRiskLevel: String(analysis?.burnoutRiskLevel ?? 'unknown'),
+			riskFactors: Array.isArray(analysis?.riskFactors) ? analysis.riskFactors : [],
+			protectiveFactors: Array.isArray(analysis?.protectiveFactors) ? analysis.protectiveFactors : [],
+			suggestions: Array.isArray(analysis?.suggestions) ? analysis.suggestions : [],
+			weeklyPlan: Array.isArray(analysis?.weeklyPlan) ? analysis.weeklyPlan : [],
+			summary: String(analysis?.summary ?? '')
+		};
+
 		const analysisId = uuidv4();
 		await db.insert(analyses).values({
 			id: analysisId,
 			submissionId,
 			createdAt: now,
-			burnoutRiskScore: analysis.burnoutRiskScore,
-			burnoutRiskLevel: analysis.burnoutRiskLevel,
-			riskFactors: JSON.stringify(analysis.riskFactors),
-			protectiveFactors: JSON.stringify(analysis.protectiveFactors),
-			suggestions: JSON.stringify(analysis.suggestions),
-			weeklyPlan: JSON.stringify(analysis.weeklyPlan),
-			summary: analysis.summary
+			burnoutRiskScore: analysisResult.burnoutRiskScore,
+			burnoutRiskLevel: analysisResult.burnoutRiskLevel,
+			riskFactors: JSON.stringify(analysisResult.riskFactors),
+			protectiveFactors: JSON.stringify(analysisResult.protectiveFactors),
+			suggestions: JSON.stringify(analysisResult.suggestions),
+			weeklyPlan: JSON.stringify(analysisResult.weeklyPlan),
+			summary: analysisResult.summary
 		});
 
 		throw redirect(303, `/results/${analysisId}`);

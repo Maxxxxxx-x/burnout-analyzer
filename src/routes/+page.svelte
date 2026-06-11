@@ -128,7 +128,16 @@
 				};
 			}}
 		>
-			<!-- Hidden serialized fields -->
+			<!-- Always submit wizard state (step panels unmount earlier fields) -->
+			<input type="hidden" name="studentName" value={studentName} />
+			<input type="hidden" name="gradeLevel" value={gradeLevel} />
+			<input type="hidden" name="academicGoals" value={academicGoals} />
+			<input type="hidden" name="dailyStudyHours" value={dailyStudyHours} />
+			<input type="hidden" name="sleepHours" value={sleepHours} />
+			<input type="hidden" name="breakFrequency" value={breakFrequency} />
+			<input type="hidden" name="exerciseFrequency" value={exerciseFrequency} />
+			<input type="hidden" name="extracurriculars" value={extracurriculars} />
+			<input type="hidden" name="currentStressLevel" value={currentStressLevel} />
 			<input type="hidden" name="schedule" value={JSON.stringify(schedule)} />
 			{#each selectedSymptoms as symptom}
 				<input type="hidden" name="symptoms" value={symptom} />
@@ -152,7 +161,6 @@
 							<label class="form-label" for="studentName">Your Name</label>
 							<input
 								id="studentName"
-								name="studentName"
 								class="form-input"
 								type="text"
 								placeholder="e.g. Alex Chen"
@@ -163,7 +171,7 @@
 
 						<div class="form-group">
 							<label class="form-label" for="gradeLevel">Grade / Year</label>
-							<select id="gradeLevel" name="gradeLevel" class="form-select" bind:value={gradeLevel} required>
+							<select id="gradeLevel" class="form-select" bind:value={gradeLevel} required>
 								<option value="" disabled>Select your level</option>
 								{#each GRADE_LEVELS as level}
 									<option value={level}>{level}</option>
@@ -176,7 +184,6 @@
 						<label class="form-label" for="academicGoals">Academic Goals</label>
 						<textarea
 							id="academicGoals"
-							name="academicGoals"
 							class="form-textarea"
 							placeholder="e.g. Maintain a 3.8 GPA, prepare for medical school entrance exams, and graduate by May 2026."
 							bind:value={academicGoals}
@@ -284,7 +291,6 @@
 							</label>
 							<input
 								id="dailyStudyHours"
-								name="dailyStudyHours"
 								type="range"
 								min="0" max="16" step="0.5"
 								bind:value={dailyStudyHours}
@@ -298,7 +304,6 @@
 							</label>
 							<input
 								id="sleepHours"
-								name="sleepHours"
 								type="range"
 								min="2" max="12" step="0.5"
 								bind:value={sleepHours}
@@ -310,7 +315,7 @@
 					<div class="form-grid" style="margin-top:1.25rem;">
 						<div class="form-group">
 							<label class="form-label" for="breakFrequency">How often do you take study breaks?</label>
-							<select id="breakFrequency" name="breakFrequency" class="form-select" bind:value={breakFrequency} required>
+							<select id="breakFrequency" class="form-select" bind:value={breakFrequency} required>
 								<option value="" disabled>Select frequency</option>
 								<option value="Every 25-30 min (Pomodoro)">Every 25–30 min (Pomodoro)</option>
 								<option value="Every 45-60 min">Every 45–60 min</option>
@@ -321,7 +326,7 @@
 
 						<div class="form-group">
 							<label class="form-label" for="exerciseFrequency">Exercise frequency</label>
-							<select id="exerciseFrequency" name="exerciseFrequency" class="form-select" bind:value={exerciseFrequency} required>
+							<select id="exerciseFrequency" class="form-select" bind:value={exerciseFrequency} required>
 								<option value="" disabled>Select frequency</option>
 								<option value="Daily">Daily (every day)</option>
 								<option value="4-5 times per week">4–5 times/week</option>
@@ -336,7 +341,6 @@
 						<label class="form-label" for="extracurriculars">Extracurricular activities (optional)</label>
 						<input
 							id="extracurriculars"
-							name="extracurriculars"
 							class="form-input"
 							type="text"
 							placeholder="e.g. Chess club, part-time barista job, student council"
@@ -358,7 +362,6 @@
 						</label>
 						<input
 							id="stressSlider"
-							name="currentStressLevel"
 							type="range"
 							min="1" max="10" step="1"
 							bind:value={currentStressLevel}
